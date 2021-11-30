@@ -1,6 +1,9 @@
 import os
 import numpy as np
 
+#Check consistency and sizing of the all HMR output numpyp arrays.
+#Check the indexing is correct.
+
 class struct:
     def __init__(self, title):
         struct.name = title
@@ -32,6 +35,8 @@ def dataCheck(struct, dataTarget, printCheck = False):
 
     def checksubsize(subdata, ref):
         #Verify size of all points in subdata are consistent
+        # print(subdata)
+        # print(subdata[0])
         verification = True
         firstSize = indCheck(subdata[0])
         #print('First size: ' + str(firstSize))
@@ -57,6 +62,8 @@ def dataCheck(struct, dataTarget, printCheck = False):
     #Feed me data and the structure
 
     data = np.load(dataTarget, allow_pickle=True)
+    if printCheck:
+        print('Data Target: ' + dataTarget)
     data_size = sizing(data)
     verification = True
     # print('Data size: ' + str(data_size))
@@ -66,38 +73,67 @@ def dataCheck(struct, dataTarget, printCheck = False):
         # print(str(type(struct.structures[i]))+ ' comp ' + str(type(data_size[i])))
         if struct.structures[i] != data_size[i]:
             verification = False
+
     if printCheck:
-        print('Data Target: ' + dataTarget)
         print('Verification of ' + str(data[0][0][0]) + ' ' + str(data[0][0][1]) +' : ' + str(verification))
     return verification
 
-def subjectCheck(directory, structure):
+def subjectCheck(directory, structure, printCh = False):
     entries = []
     listdir = os.listdir(directory)
     print('Checking directory :' + str(directory))
-    # print(len(listdir))
+    print(len(listdir))
     for a in listdir:
-        if a != 'desktop.ini':
+        check = a.split('.')
+        if check[-1] == 'npy':
             target = os.path.join(directory, a)
-            res = dataCheck(structure, target)
+            res = dataCheck(structure, target, printCheck= printCh)
             if res:
                 entries.append(target)
     return entries
 
+def sum(data):
+    print(len(data))
+    print(data.shape)
+    return
 
-#Develop data structure to test
-hmr2struct = struct("hmr2")
-hmr2struct.addStructs([('Tags', 3), ('Joints', (21,2)), ('Joints3d', (21, 3)), ('Poses', (24, 3, 3)), ('Shape', (10,)) ])
-hmr2struct.print()
+# #Develop data structure to test
+# hmr2struct = struct("hmr2 struct 1")
+# hmr2struct.addStructs([('Tags', 3), ('Joints', (21,2)), ('Joints3d', (21, 3)), ('Poses', (24, 3, 3)), ('Shape', (10,))])
+# hmr2struct.print()
+
+# hmr2struct = struct("hmr2 struct 2")
+# hmr2struct.addStructs([('Tags', 3), ('Joints', (21,2)), ('Joints3d', (21, 3)), ('PoseShape', (82,)), ('Camera', (3,)) ])
+# hmr2struct.print()
+
+hmr2gtstruct = struct("hmr2 struct 2gt")
+hmr2gtstruct.addStructs([('Tags', 3), ('Joints', (21,2)), ('Joints3d', (21, 3)), ('PoseShape', (82,)), ('Camera', (3,)) , ('JointsGT', (17,2)), ('Joints3dGT', (17, 3)) ])
+hmr2gtstruct.print()
+
+
 
 #Input test data
-# test = r'D:\.shortcut-targets-by-id\1LHR8VsKK7PJk9cbF-zygVbPqE_zejDMB\Cropped Images\HMR Outputs\S1\desktop.ini'
+# test = r'D:\.shortcut-targets-by-id\1LHR8VsKK7PJk9cbF-zygVbPqE_zejDMB\Cropped Images\S11\Directions 1.58860488_results.npy'
+#
 # dataCheck(hmr2struct, test, printCheck= True)
+# data = np.load(test, allow_pickle=True)
+# # sum(data[0])
+# sum(data[1][0])
+# sum(data[2][0])
+# sum(data[3][0])
+# sum(data[4][0])
+
+# debug = r'D:\.shortcut-targets-by-id\1LHR8VsKK7PJk9cbF-zygVbPqE_zejDMB\Cropped Images\HMR Outputs\Structure 2\S5\Discussion 2.58860488_results.npy'
+# de = np.load(debug, allow_pickle=True)
+# print('True')
 
 #Test folder
-folder = r'D:\.shortcut-targets-by-id\1LHR8VsKK7PJk9cbF-zygVbPqE_zejDMB\Cropped Images\HMR Outputs\S9'
-b = subjectCheck(folder, hmr2struct)
-print(b)
-print(len(b))
+folders = ['S1', 'S5', 'S6', 'S7', 'S8', 'S9', 'S11']
 
+for folder in folders:
+    target = r'D:\.shortcut-targets-by-id\1LHR8VsKK7PJk9cbF-zygVbPqE_zejDMB\Cropped Images\HMR Outputs\Structure 2_gt'
+    target = os.path.join(target, folder)
+    print('Target: ' + target)
+    b = subjectCheck(target, hmr2gtstruct, printCh= False)
+    print('Entries Verified: ' + str(len(b)))
 

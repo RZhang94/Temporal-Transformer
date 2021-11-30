@@ -4,6 +4,7 @@
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 #
+import os
 
 import numpy as np
 import copy
@@ -15,10 +16,21 @@ from skeleton import Skeleton
 from mocap_dataset import MocapDataset
 from camera import normalize_screen_coordinates, image_coordinates
 
+def getCam(id):
+    if id == '54138969':
+        return 0
+    if id == '55011271':
+        return 1
+    if id == '58860488':
+        return 2
+    if id == '60457274':
+        return 3
+
 h36m_skeleton = Skeleton(parents=[-1, 0, 1, 2, 3, 4, 0, 6, 7, 8, 9, 0, 11, 12, 13, 14, 12,
                                   16, 17, 18, 19, 20, 19, 22, 12, 24, 25, 26, 27, 28, 27, 30],
                          joints_left=[6, 7, 8, 9, 10, 16, 17, 18, 19, 20, 21, 22, 23],
                          joints_right=[1, 2, 3, 4, 5, 24, 25, 26, 27, 28, 29, 30, 31])
+
 
 h36m_cameras_intrinsic_params = [
     {
@@ -210,6 +222,17 @@ h36m_cameras_extrinsic_params = {
     ],
 }
 
+def Human36mDataset2d(path):
+    data = np.load(path, allow_pickle=True)['positions_2d'].item()
+    # self._data = {}
+    # for subject, actions in data.items():
+    #     self._data[subject] = {}
+    #     for action_name, positions in actions.items():
+    #         self._data[subject][action_name] = {
+    #             'positions': positions,
+    #         }
+    return data
+
 class Human36mDataset(MocapDataset):
     def __init__(self, path, remove_static_joints=True):
         super().__init__(fps=50, skeleton=h36m_skeleton)
@@ -257,8 +280,119 @@ class Human36mDataset(MocapDataset):
 
     def supports_semi_supervised(self):
         return True
+def Indexing(data):
+    frame = data[2].split('_')
+    frame = frame[1].split('.')
+    frame = frame[0]
+    # print(data)
+    # print(frame)
+    return frame
+
+def rootSearch(source, gt, gt2d, target):
+    list = os.listdir(source)
+    for folder in list:
+        if folder != 'desktop.ini':
+            # print(folder)
+            folderTarget = os.path.join(source,folder)
+            folderSearch(folderTarget, gt,gt2d,  target)
+
+def folderSearch(source, gt, gt2d, target):
+    print(source)
+    list = os.listdir(source)
+    for file in list:
+        if file != 'desktop.ini':
+            fileTarget = os.path.join(source,file)
+            print(fileTarget)
+            IndexAttachGT(fileTarget, gt, gt2d, target)
+
+def IndexAttachGT(hmrTar, data, data2d, rootTarget):
+    #Data source and load
+    hmrDat = np.load(hmrTar, allow_pickle=True)
+
+    #Verify correct number of frames to size.
+    number = len(hmrDat[0]) #number of entries
+    frametarget = (number-1)*20+1 #Number of max frames
+
+    max = 0
+    for i in hmrDat[0]:
+        if int(Indexing(i)) > max:
+            max = int(Indexing(i))
+
+    if max != frametarget:
+        print('This tagged video is not the correct frame size' + str(hmrDat[0][0]))
+
+    relation = []
+
+    #find related frame to array
+    for i in range(1, frametarget+20, 20): #Frame we're searching for
+        for a in range(0,number):
+            if int(Indexing(hmrDat[0][a])) == i:
+                relation.append([i,a])
+
+    tags = []
+    joints = []
+    joints3d = []
+    poseShapes  = []
+    cams = []
+    gt3ds = []
+    gt2ds = []
+
+    for i in range(0, len(relation)):
+        # print('New Index: ' + str(i) +' - ' + str(relation[i]))
+        a = relation[i][1]
+        # print(a)
+        tags.append(hmrDat[0][a])
+        joints.append(hmrDat[1][a])
+        joints3d.append(hmrDat[2][a])
+        poseShapes.append(hmrDat[3][a])
+        cams.append(hmrDat[4][a])
+
+        subject = hmrDat[0][a][0]
+        video = hmrDat[0][a][1].split('.')[0]
+        if video == 'TakingPhoto':
+            video = 'Photo'
+        if video == 'TakingPhoto 1':
+            video = 'Photo 1'
+        if video == 'WalkingDog':
+            video = "WalkDog"
+        if video == 'WalkingDog 1':
+            video = 'WalkDog 1'
+
+        if subject == 'S11' and video == 'Directions':
+            continue
+
+        camera = getCam(hmrDat[0][a][1].split('.')[1])
+        # Use consistent naming convention
+        gt3d = data[subject][video]['positions'][i]
+        gt3ds.append(gt3d)
+        gt2d = data2d[subject][video][camera][a]
+        gt2ds.append(gt2d)
+        # print(len(joints3d))
+        # print(gt3d.shape)
+
+    results = np.array([tags, joints, joints3d, poseShapes, cams, gt2ds, gt3ds], dtype=object)
+    savePath = os.path.join(rootTarget, results[0][1][0], results[0][1][1]+'_resultsgt.npy')
+    np.save(savePath, results)
 
 data = Human36mDataset(r'C:\Users\JoyceRay\PycharmProjects\ECE-3\VideoPose3D\data\data_3d_h36m.npz')
-ex = data['S1']['Directions 1']['positions']
-print(ex)
-print('hi')
+data2d = Human36mDataset2d(r'C:\Users\JoyceRay\PycharmProjects\ECE-3\VideoPose3D\data\data_2d_h36m_gt.npz')
+
+print('data verified')
+
+#Define the target location to save into and the target source
+rootTarget = r'D:\.shortcut-targets-by-id\1LHR8VsKK7PJk9cbF-zygVbPqE_zejDMB\Cropped Images\HMR Outputs\Structure 2_gt'
+rootSource = r'D:\.shortcut-targets-by-id\1LHR8VsKK7PJk9cbF-zygVbPqE_zejDMB\Cropped Images\HMR Outputs\Structure 2'
+
+#Sort through all to determine npz
+rootSearch(rootSource,data, data2d, rootTarget)
+
+# root = r'D:\.shortcut-targets-by-id\1LHR8VsKK7PJk9cbF-zygVbPqE_zejDMB\Cropped Images\HMR Outputs\Structure 2_gt'
+# sub = ['S1', 'S5', 'S6', 'S7', 'S8', 'S9', 'S11']
+# for a in sub:
+#     subtar = os.path.join(root,a)
+#     print(subtar)
+#     os.mkdir(subtar)
+
+
+
+print('true')
