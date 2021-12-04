@@ -367,15 +367,18 @@ def IndexAttachGT(hmrTar, data, data2d, rootTarget):
         print(i)
         print(a)
         b = relation[i][0]-1
-        gt3d = data[subject][video]['positions'][b]
+        gt3d = np.zeros((17,3))
+        print(gt3d.shape)
         gt3ds.append(gt3d)
-        gt2d = data2d[subject][video][camera][b]
+        gt2d = np.zeros((17,2))
+        print(gt2d.shape)
         gt2ds.append(gt2d)
         # print(len(joints3d))
         # print(gt3d.shape)
 
     results = np.array([tags, joints, joints3d, poseShapes, cams, gt2ds, gt3ds], dtype=object)
     savePath = os.path.join(rootTarget, results[0][1][0], results[0][1][1]+'_resultsgt.npy')
+    print(savePath)
     np.save(savePath, results)
 
 data = Human36mDataset(r'C:\Users\JoyceRay\PycharmProjects\ECE-3\VideoPose3D\data\data_3d_h36m.npz')
@@ -388,7 +391,8 @@ rootTarget = r'G:\.shortcut-targets-by-id\1LHR8VsKK7PJk9cbF-zygVbPqE_zejDMB\Crop
 rootSource = r'G:\.shortcut-targets-by-id\1LHR8VsKK7PJk9cbF-zygVbPqE_zejDMB\Cropped Images\HMR Outputs\Structure 2'
 
 #Sort through all to determine npz
-rootSearch(rootSource,data, data2d, rootTarget)
+# rootSearch(rootSource,data, data2d, rootTarget)
+folderSearch(r'G:\.shortcut-targets-by-id\1LHR8VsKK7PJk9cbF-zygVbPqE_zejDMB\Cropped Images\HMR Outputs\Structure 2\S2', data, data2d, rootTarget)
 
 # root = r'D:\.shortcut-targets-by-id\1LHR8VsKK7PJk9cbF-zygVbPqE_zejDMB\Cropped Images\HMR Outputs\Structure 2_gt'
 # sub = ['S1', 'S5', 'S6', 'S7', 'S8', 'S9', 'S11']
