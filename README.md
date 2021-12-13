@@ -6,7 +6,4 @@ Fall 2021
 
 Files for the temporal transformer and other data files for preprocessing H3.6M data.
 
-Contributors:
-Zhaoxiang Zhang
-Ray Zhang
-Jingyi Wang
+Contributors: Zhaoxiang Zhang, Ray Zhang, Jingyi Wang
