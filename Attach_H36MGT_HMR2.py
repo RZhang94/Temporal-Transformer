@@ -378,17 +378,15 @@ def IndexAttachGT(hmrTar, data, data2d, rootTarget):
     savePath = os.path.join(rootTarget, results[0][1][0], results[0][1][1]+'_resultsgt.npy')
     np.save(savePath, results)
 
-data = Human36mDataset(r'C:\Users\JoyceRay\PycharmProjects\ECE-3\VideoPose3D\data\data_3d_h36m.npz')
-data2d = Human36mDataset2d(r'C:\Users\JoyceRay\PycharmProjects\ECE-3\VideoPose3D\data\data_2d_h36m_gt.npz')
-
-print('data verified')
+# data = Human36mDataset(r'C:\Users\JoyceRay\PycharmProjects\ECE-3\VideoPose3D\data\data_3d_h36m.npz')
+# data2d = Human36mDataset2d(r'C:\Users\JoyceRay\PycharmProjects\ECE-3\VideoPose3D\data\data_2d_h36m_gt.npz')
 
 #Define the target location to save into and the target source
 rootTarget = r'G:\.shortcut-targets-by-id\1LHR8VsKK7PJk9cbF-zygVbPqE_zejDMB\Cropped Images\HMR Outputs\Structure 2_gt'
 rootSource = r'G:\.shortcut-targets-by-id\1LHR8VsKK7PJk9cbF-zygVbPqE_zejDMB\Cropped Images\HMR Outputs\Structure 2'
 
 #Sort through all to determine npz
-rootSearch(rootSource,data, data2d, rootTarget)
+# rootSearch(rootSource,data, data2d, rootTarget)
 
 # root = r'D:\.shortcut-targets-by-id\1LHR8VsKK7PJk9cbF-zygVbPqE_zejDMB\Cropped Images\HMR Outputs\Structure 2_gt'
 # sub = ['S1', 'S5', 'S6', 'S7', 'S8', 'S9', 'S11']
@@ -397,6 +395,7 @@ rootSearch(rootSource,data, data2d, rootTarget)
 #     print(subtar)
 #     os.mkdir(subtar)
 
-
+target = r'G:\.shortcut-targets-by-id\1LHR8VsKK7PJk9cbF-zygVbPqE_zejDMB\Cropped Images\MeshVid\Source\vertices.S6.Discussion 1.54138969_resultsgt.npy'
+a = np.load(target, allow_pickle=True)
 
 print('true')
